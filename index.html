@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Lula World</title>
+    <title>Super Lula World - v1.0.1</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -40,7 +40,6 @@
             image-rendering: pixelated;
         }
 
-        /* UI Overlays */
         .overlay {
             position: absolute;
             top: 0;
@@ -51,10 +50,11 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.82);
             color: #fff;
             text-align: center;
             z-index: 10;
+            padding: 20px;
         }
 
         .hidden {
@@ -62,24 +62,33 @@
         }
 
         h1 {
-            font-size: 32px;
+            font-size: 28px;
             color: #ff3333;
             text-shadow: 4px 4px 0px #000, -2px -2px 0px #fff;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             line-height: 1.4;
         }
 
+        .version-badge {
+            background: #ffcc00;
+            color: #000;
+            font-size: 10px;
+            padding: 4px 8px;
+            margin-bottom: 15px;
+            border: 2px solid #fff;
+        }
+
         p {
-            font-size: 12px;
+            font-size: 10px;
             color: #eee;
-            margin-bottom: 30px;
-            line-height: 1.8;
+            margin-bottom: 22px;
+            line-height: 1.9;
         }
 
         button {
             font-family: 'Press Start 2P', monospace, sans-serif;
-            font-size: 16px;
-            padding: 15px 30px;
+            font-size: 14px;
+            padding: 14px 28px;
             background-color: #ffcc00;
             color: #000;
             border: 4px solid #fff;
@@ -93,20 +102,15 @@
             transform: scale(1.05);
         }
 
-        button:active {
-            transform: scale(0.95);
-        }
-
-        /* HUD */
         #hud {
             position: absolute;
-            top: 15px;
-            left: 20px;
-            right: 20px;
+            top: 12px;
+            left: 15px;
+            right: 15px;
             display: flex;
             justify-content: space-between;
             color: #fff;
-            font-size: 16px;
+            font-size: 12px;
             text-shadow: 2px 2px 0 #000;
             z-index: 5;
             pointer-events: none;
@@ -123,24 +127,30 @@
     <!-- HUD -->
     <div id="hud" class="hidden">
         <div class="hud-item">VIDAS: <span id="lives-display">3</span></div>
+        <div class="hud-item">MONTADA: <span id="mount-display">NÃO</span></div>
         <div class="hud-item">PONTOS: <span id="score-display">0000</span></div>
     </div>
 
-    <!-- Tela Inicial -->
+    <!-- Ecrã Inicial -->
     <div id="start-screen" class="overlay">
         <h1>SUPER LULA WORLD</h1>
-        <p>Setas ou A/D para Mover | Espaço ou W para Pular<br>Colete estrelas e livros, desvie dos obstáculos!</p>
-        <button id="start-btn">JOGAR</button>
+        <div class="version-badge">UPDATE v1.0.1 - TIC E DEV EDITION</div>
+        <p>
+            [Setas / A,D] Mover | [Espaço / W] Saltar (Salte na cabeça para amassar!)<br>
+            [X / J / Shift] Lançar "Kit Gay" | Companion: Hericka ativa!<br>
+            Novidades: Flávio no Dino (Nerfado), Montada Janja e Boss Final TRUMP!
+        </p>
+        <button id="start-btn">JOGAR v1.0.1</button>
     </div>
 
-    <!-- Tela de Game Over -->
+    <!-- Ecrã de Game Over -->
     <div id="game-over-screen" class="overlay hidden">
         <h1 style="color: #ff4444;">GAME OVER</h1>
         <p id="final-score-lose">PONTOS: 0</p>
-        <button id="restart-btn-lose">REINICIAR</button>
+        <button id="restart-btn-lose">TENTAR NOVAMENTE</button>
     </div>
 
-    <!-- Tela de Vitória -->
+    <!-- Ecrã de Vitória -->
     <div id="victory-screen" class="overlay hidden">
         <h1 style="color: #44ff44;">VITÓRIA!</h1>
         <p id="final-score-win">PONTOS: 0</p>
@@ -154,9 +164,9 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Elementos da UI
 const hud = document.getElementById('hud');
 const livesDisplay = document.getElementById('lives-display');
+const mountDisplay = document.getElementById('mount-display');
 const scoreDisplay = document.getElementById('score-display');
 const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
@@ -164,27 +174,24 @@ const victoryScreen = document.getElementById('victory-screen');
 const finalScoreLose = document.getElementById('final-score-lose');
 const finalScoreWin = document.getElementById('final-score-win');
 
-// Estado Global do Jogo
-let gameState = 'START'; // START, PLAYING, GAMEOVER, VICTORY
+let gameState = 'START';
 let score = 0;
 let lives = 3;
 let cameraX = 0;
-const gravity = 0.6;
-const levelWidth = 3200;
+const gravity = 0.58;
+const levelWidth = 3600;
 
-// Controles
-const keys = {
-    left: false,
-    right: false,
-    up: false
-};
+const keys = { left: false, right: false, up: false };
 
 window.addEventListener('keydown', (e) => {
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
         keys.up = true;
-        if(gameState === 'PLAYING') e.preventDefault();
+        if (gameState === 'PLAYING') e.preventDefault();
+    }
+    if ((e.code === 'KeyX' || e.code === 'KeyJ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && gameState === 'PLAYING') {
+        player.shoot();
     }
 });
 
@@ -194,14 +201,21 @@ window.addEventListener('keyup', (e) => {
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = false;
 });
 
-// Entidades do Jogo
 let player;
 let platforms = [];
 let items = [];
 let enemies = [];
+let projectiles = [];
+let enemyProjectiles = [];
 let spikes = [];
 let clouds = [];
+let floatingTexts = [];
+let boss = null;
 let goal;
+
+function addFloatingText(text, x, y, color = '#fff') {
+    floatingTexts.push({ text, x, y, color, timer: 45 });
+}
 
 class Player {
     constructor() {
@@ -210,12 +224,13 @@ class Player {
         this.resetPosition();
         this.vx = 0;
         this.vy = 0;
-        this.speed = 4.5;
+        this.speed = 4.6;
         this.jumpStrength = -12.5;
         this.grounded = false;
         this.facing = 'right';
         this.invulnerable = 0;
-        this.frame = 0;
+        this.mounted = false; // Montada na Janja
+        this.shootCooldown = 0;
     }
 
     resetPosition() {
@@ -225,32 +240,40 @@ class Player {
         this.vy = 0;
     }
 
+    shoot() {
+        if (this.shootCooldown > 0) return;
+        const dir = this.facing === 'right' ? 1 : -1;
+        projectiles.push({
+            x: this.facing === 'right' ? this.x + this.width : this.x - 20,
+            y: this.y + 16,
+            width: 22,
+            height: 14,
+            vx: dir * 8.5
+        });
+        this.shootCooldown = 18;
+    }
+
     update() {
-        // Movimento Horizontal
+        if (this.shootCooldown > 0) this.shootCooldown--;
+
         if (keys.left) {
             this.vx = -this.speed;
             this.facing = 'left';
-            this.frame += 0.2;
         } else if (keys.right) {
             this.vx = this.speed;
             this.facing = 'right';
-            this.frame += 0.2;
         } else {
             this.vx = 0;
-            this.frame = 0;
         }
 
-        // Pulo
         if (keys.up && this.grounded) {
-            this.vy = this.jumpStrength;
+            this.vy = this.mounted ? -14.2 : this.jumpStrength;
             this.grounded = false;
         }
 
-        // Aplicar Gravidade
         this.vy += gravity;
         if (this.vy > 12) this.vy = 12;
 
-        // Atualizar Posição X e Checar Colisões Horizontais
         this.x += this.vx;
         if (this.x < 0) this.x = 0;
         if (this.x + this.width > levelWidth) this.x = levelWidth - this.width;
@@ -262,7 +285,6 @@ class Player {
             }
         }
 
-        // Atualizar Posição Y e Checar Colisões Verticais
         this.y += this.vy;
         this.grounded = false;
 
@@ -279,8 +301,8 @@ class Player {
             }
         }
 
-        // Queda em Abismo
         if (this.y > canvas.height + 50) {
+            this.mounted = false;
             loseLife();
         }
 
@@ -288,65 +310,95 @@ class Player {
     }
 
     draw(ctx, camX) {
-        if (this.invulnerable > 0 && Math.floor(this.invulnerable / 4) % 2 === 0) return;
-
         const px = Math.floor(this.x - camX);
         const py = Math.floor(this.y);
 
-        ctx.save();
+        // Desenhar Companion: Hericka (sempre a flutuar ao lado)
+        const compX = this.facing === 'right' ? px - 28 : px + 38;
+        const compY = py - 10 + Math.floor(Math.sin(Date.now() / 160) * 5);
         
-        // Desenho Pixel Art Estilizado do Lula
-        // Terno / Roupa (Vermelho/Cinza)
-        ctx.fillStyle = '#cc0000'; // Camisa vermelha
-        ctx.fillRect(px + 6, py + 20, 20, 14);
-        
-        // Calça
-        ctx.fillStyle = '#2b2b2b';
-        ctx.fillRect(px + 6, py + 34, 8, 10);
-        ctx.fillRect(px + 18, py + 34, 8, 10);
+        ctx.fillStyle = '#ff66b2'; // Roupa Rosa da Hericka
+        ctx.fillRect(compX + 4, compY + 12, 14, 12);
+        ctx.fillStyle = '#8d5524'; // Pele
+        ctx.fillRect(compX + 5, compY + 3, 12, 10);
+        ctx.fillStyle = '#1a1a1a'; // Cabelo comprido
+        ctx.fillRect(compX + 3, compY + 1, 16, 4);
+        ctx.fillRect(compX + 2, compY + 3, 4, 14);
+        ctx.fillRect(compX + 16, compY + 3, 4, 14);
+        ctx.fillStyle = '#fff';
+        ctx.font = '7px "Press Start 2P"';
+        ctx.fillText('HERICKA', compX - 10, compY - 4);
 
-        // Cabeça / Pele
-        ctx.fillStyle = '#f1c27d';
-        ctx.fillRect(px + 6, py + 4, 20, 16);
+        if (this.invulnerable > 0 && Math.floor(this.invulnerable / 4) % 2 === 0) return;
 
-        // Cabelo e Barba Grisalha (Branco/Cinza Claro)
-        ctx.fillStyle = '#e6e6e6';
-        // Topo e laterais do cabelo
-        ctx.fillRect(px + 4, py + 2, 24, 5);
-        ctx.fillRect(px + 4, py + 6, 4, 8);
-        ctx.fillRect(px + 24, py + 6, 4, 8);
-        // Barba
-        ctx.fillRect(px + 6, py + 14, 20, 8);
-
-        // Olhos
-        ctx.fillStyle = '#000';
-        if (this.facing === 'right') {
-            ctx.fillRect(px + 18, py + 9, 4, 4);
-        } else {
-            ctx.fillRect(px + 10, py + 9, 4, 4);
+        // Se estiver montado na Janja
+        let offsetLulaY = 0;
+        if (this.mounted) {
+            offsetLulaY = -12;
+            // Desenhar Janja na base como suporte/montada
+            ctx.fillStyle = '#cc0066'; // Roupa vermelha/magenta
+            ctx.fillRect(px + 2, py + 24, 28, 14);
+            ctx.fillStyle = '#f5cfa0'; // Rosto
+            ctx.fillRect(px + 8, py + 12, 16, 12);
+            ctx.fillStyle = '#d4af37'; // Cabelo loiro
+            ctx.fillRect(px + 6, py + 10, 20, 5);
+            ctx.fillStyle = '#111'; // Óculos
+            ctx.fillRect(px + 10, py + 15, 12, 3);
+            ctx.fillStyle = '#222'; // Pernas
+            ctx.fillRect(px + 6, py + 38, 8, 6);
+            ctx.fillRect(px + 18, py + 38, 8, 6);
+            
+            ctx.fillStyle = '#ff99cc';
+            ctx.font = '7px "Press Start 2P"';
+            ctx.fillText('JANJA', px - 2, py + 54);
         }
 
-        // Estrela branca pequena no peito
+        // Desenhar Lula
+        const ly = py + offsetLulaY;
+        ctx.fillStyle = '#cc0000';
+        ctx.fillRect(px + 6, ly + 20, 20, 14);
+        ctx.fillStyle = '#2b2b2b';
+        ctx.fillRect(px + 6, ly + 34, 8, 10);
+        ctx.fillRect(px + 18, ly + 34, 8, 10);
+        ctx.fillStyle = '#f1c27d';
+        ctx.fillRect(px + 6, ly + 4, 20, 16);
+        ctx.fillStyle = '#e6e6e6';
+        ctx.fillRect(px + 4, ly + 2, 24, 5);
+        ctx.fillRect(px + 4, ly + 6, 4, 8);
+        ctx.fillRect(px + 24, ly + 6, 4, 8);
+        ctx.fillRect(px + 6, ly + 14, 20, 8);
+        ctx.fillStyle = '#000';
+        if (this.facing === 'right') ctx.fillRect(px + 18, ly + 9, 4, 4);
+        else ctx.fillRect(px + 10, ly + 9, 4, 4);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(px + 14, py + 24, 4, 4);
-
-        ctx.restore();
+        ctx.fillRect(px + 14, ly + 24, 4, 4);
     }
 }
 
 class Enemy {
-    constructor(x, y, minX, maxX) {
+    constructor(x, y, minX, maxX, type = 'bolsonaro', label = 'BOLSONARO') {
         this.x = x;
         this.y = y;
-        this.width = 32;
-        this.height = 44;
+        this.type = type;
+        this.label = label;
+        this.width = type === 'flavio_dino' ? 46 : 32;
+        this.height = type === 'flavio_dino' ? 54 : 44;
         this.minX = minX;
         this.maxX = maxX;
-        this.vx = 2;
-        this.facing = 'right';
+        // Flávio Hipotético nerfado na velocidade!
+        this.vx = type === 'flavio_dino' ? 1.1 : 1.7;
+        this.facing = 'left';
+        this.squashed = false;
+        this.squashTimer = 25;
+        this.shootTimer = 90;
     }
 
     update() {
+        if (this.squashed) {
+            this.squashTimer--;
+            return;
+        }
+
         this.x += this.vx;
         if (this.x <= this.minX) {
             this.x = this.minX;
@@ -357,120 +409,245 @@ class Enemy {
             this.vx = -Math.abs(this.vx);
             this.facing = 'left';
         }
+
+        // Flávio no Dinossauro lança "Kit Hétero" (Nerfado: intervalo maior e mais lento)
+        if (this.type === 'flavio_dino') {
+            this.shootTimer--;
+            if (this.shootTimer <= 0 && Math.abs(this.x - player.x) < 480) {
+                const dir = player.x < this.x ? -1 : 1;
+                enemyProjectiles.push({
+                    x: this.x + (dir > 0 ? this.width : -24),
+                    y: this.y + 18,
+                    width: 24,
+                    height: 12,
+                    vx: dir * 3.8,
+                    label: 'KIT HETERO'
+                });
+                this.shootTimer = 150; // Nerfado para dar tempo de desviar
+            }
+        }
     }
 
     draw(ctx, camX) {
         const ex = Math.floor(this.x - camX);
-        const ey = Math.floor(this.y);
+        let ey = Math.floor(this.y);
 
-        // Desenho Pixel Art Estilizado do Inimigo (Bolsonaro)
-        // Terno Azul Escuro / Faixa Verde e Amarela
-        ctx.fillStyle = '#1a2a4c';
-        ctx.fillRect(ex + 6, ey + 20, 20, 14);
-        
-        // Faixa/Detalhe Verde e Amarelo
-        ctx.fillStyle = '#009c3b';
-        ctx.fillRect(ex + 8, ey + 20, 4, 14);
-        ctx.fillStyle = '#ffdf00';
-        ctx.fillRect(ex + 12, ey + 20, 4, 14);
-
-        // Calça
-        ctx.fillStyle = '#111a30';
-        ctx.fillRect(ex + 6, ey + 34, 8, 10);
-        ctx.fillRect(ex + 18, ey + 34, 8, 10);
-
-        // Cabeça / Pele
-        ctx.fillStyle = '#f5cfa0';
-        ctx.fillRect(ex + 6, ey + 6, 20, 14);
-
-        // Cabelo Castanho repartido de lado
-        ctx.fillStyle = '#5c4033';
-        ctx.fillRect(ex + 4, ey + 2, 24, 6);
-        ctx.fillRect(ex + 4, ey + 8, 4, 4);
-
-        // Olhos e Sobrancelha franzida
-        ctx.fillStyle = '#000';
-        if (this.facing === 'right') {
-            ctx.fillRect(ex + 18, ey + 11, 4, 4);
-            ctx.fillRect(ex + 17, ey + 9, 6, 2);
+        ctx.save();
+        if (this.squashed) {
+            // Efeito amassado quando salta na cabeça!
+            ctx.translate(ex, ey + this.height - 12);
+            ctx.scale(1, 0.28);
+            ey = 0;
         } else {
-            ctx.fillRect(ex + 10, ey + 11, 4, 4);
-            ctx.fillRect(ex + 9, ey + 9, 6, 2);
+            ctx.translate(ex, ey);
+            ey = 0;
+        }
+
+        if (this.type === 'flavio_dino') {
+            // Desenhar Dinossauro Verde
+            ctx.fillStyle = '#2eb82e';
+            ctx.fillRect(4, 26, 34, 20); // Corpo do Dino
+            ctx.fillRect(this.facing === 'right' ? 30 : 0, 14, 16, 14); // Cabeça do Dino
+            ctx.fillRect(10, 46, 8, 8); // Pata 1
+            ctx.fillRect(26, 46, 8, 8); // Pata 2
+            ctx.fillStyle = '#000';
+            ctx.fillRect(this.facing === 'right' ? 40 : 4, 17, 3, 3); // Olho Dino
+
+            // Desenhar Flávio em cima do Dino
+            ctx.fillStyle = '#1a2a4c';
+            ctx.fillRect(14, 12, 16, 14);
+            ctx.fillStyle = '#f5cfa0';
+            ctx.fillRect(14, 2, 16, 10);
+            ctx.fillStyle = '#3b2818';
+            ctx.fillRect(13, 0, 18, 4);
+        } else {
+            // Inimigos padrão (Bolsonaro, Nikole, Pavanato)
+            ctx.fillStyle = this.type === 'nikole' ? '#800080' : '#1a2a4c';
+            ctx.fillRect(6, 20, 20, 14);
+            ctx.fillStyle = '#009c3b';
+            ctx.fillRect(8, 20, 4, 14);
+            ctx.fillStyle = '#ffdf00';
+            ctx.fillRect(12, 20, 4, 14);
+            ctx.fillStyle = '#111a30';
+            ctx.fillRect(6, 34, 8, 10);
+            ctx.fillRect(18, 34, 8, 10);
+            ctx.fillStyle = '#f5cfa0';
+            ctx.fillRect(6, 6, 20, 14);
+            ctx.fillStyle = '#5c4033';
+            ctx.fillRect(4, 2, 24, 6);
+            ctx.fillStyle = '#000';
+            if (this.facing === 'right') ctx.fillRect(18, 11, 4, 4);
+            else ctx.fillRect(10, 11, 4, 4);
+        }
+        ctx.restore();
+
+        if (!this.squashed) {
+            ctx.fillStyle = '#fff';
+            ctx.font = '7px "Press Start 2P"';
+            ctx.fillText(this.label, ex - 6, Math.floor(this.y) - 6);
         }
     }
 }
 
-// Inicialização da Fase
+class BossTrump {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 56;
+        this.height = 72;
+        this.minX = x - 180;
+        this.maxX = x + 120;
+        this.vx = -2.2;
+        this.vy = 0;
+        this.hp = 5;
+        this.maxHp = 5;
+        this.alive = true;
+        this.shootTimer = 80;
+        this.jumpTimer = 110;
+    }
+
+    update() {
+        if (!this.alive) return;
+
+        this.x += this.vx;
+        if (this.x <= this.minX) {
+            this.x = this.minX;
+            this.vx = Math.abs(this.vx);
+        } else if (this.x + this.width >= this.maxX) {
+            this.x = this.maxX - this.width;
+            this.vx = -Math.abs(this.vx);
+        }
+
+        this.jumpTimer--;
+        if (this.jumpTimer <= 0 && this.y >= 328) {
+            this.vy = -10;
+            this.jumpTimer = 120;
+        }
+
+        this.vy += gravity;
+        this.y += this.vy;
+        if (this.y > 328) {
+            this.y = 328;
+            this.vy = 0;
+        }
+
+        this.shootTimer--;
+        if (this.shootTimer <= 0 && Math.abs(this.x - player.x) < 550) {
+            const dir = player.x < this.x ? -1 : 1;
+            enemyProjectiles.push({
+                x: this.x + (dir > 0 ? this.width : -26),
+                y: this.y + 30,
+                width: 26,
+                height: 14,
+                vx: dir * 4.5,
+                label: 'TARIFA $'
+            });
+            this.shootTimer = 95;
+        }
+    }
+
+    draw(ctx, camX) {
+        if (!this.alive) return;
+        const bx = Math.floor(this.x - camX);
+        const by = Math.floor(this.y);
+
+        // Barra de Vida do Boss Trump
+        ctx.fillStyle = '#000';
+        ctx.fillRect(bx - 10, by - 26, 76, 10);
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(bx - 8, by - 24, (72 * this.hp) / this.maxHp, 6);
+        ctx.fillStyle = '#ffcc00';
+        ctx.font = '8px "Press Start 2P"';
+        ctx.fillText('BOSS: TRUMP', bx - 16, by - 30);
+
+        // Fato Azul Escuro
+        ctx.fillStyle = '#0f1f3d';
+        ctx.fillRect(bx + 6, by + 28, 44, 30);
+        ctx.fillRect(bx + 10, by + 58, 14, 14);
+        ctx.fillRect(bx + 32, by + 58, 14, 14);
+
+        // Camisa Branca e Gravata Vermelha Comprida Clássica
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(bx + 22, by + 28, 12, 20);
+        ctx.fillStyle = '#e60000';
+        ctx.fillRect(bx + 25, by + 30, 6, 26);
+
+        // Rosto Laranja
+        ctx.fillStyle = '#ff8c42';
+        ctx.fillRect(bx + 10, by + 8, 36, 20);
+
+        // Topete Loiro Icónico
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(bx + 6, by, 44, 10);
+        ctx.fillRect(bx + 4, by + 4, 10, 8);
+
+        // Olhos
+        ctx.fillStyle = '#000';
+        ctx.fillRect(bx + 16, by + 14, 5, 4);
+        ctx.fillRect(bx + 34, by + 14, 5, 4);
+    }
+}
+
 function initLevel() {
     player = new Player();
     cameraX = 0;
+    projectiles = [];
+    enemyProjectiles = [];
+    floatingTexts = [];
 
-    // Plataformas (Chão e Blocos Flutuantes)
     platforms = [
-        // Chão Principal com buracos
-        { x: 0, y: 400, width: 700, height: 50 },
-        { x: 800, y: 400, width: 850, height: 50 },
-        { x: 1750, y: 400, width: 650, height: 50 },
-        { x: 2500, y: 400, width: 700, height: 50 },
+        { x: 0, y: 400, width: 750, height: 50 },
+        { x: 840, y: 400, width: 850, height: 50 },
+        { x: 1780, y: 400, width: 700, height: 50 },
+        { x: 2560, y: 400, width: 1040, height: 50 },
 
-        // Plataformas Elevadas
-        { x: 250, y: 300, width: 120, height: 24 },
+        { x: 250, y: 300, width: 130, height: 24 },
         { x: 450, y: 220, width: 150, height: 24 },
-        { x: 900, y: 290, width: 160, height: 24 },
-        { x: 1150, y: 200, width: 160, height: 24 },
-        { x: 1400, y: 280, width: 120, height: 24 },
-        { x: 1850, y: 310, width: 120, height: 24 },
-        { x: 2050, y: 230, width: 180, height: 24 },
-        { x: 2300, y: 160, width: 120, height: 24 },
-        { x: 2650, y: 290, width: 140, height: 24 }
+        { x: 920, y: 290, width: 160, height: 24 },
+        { x: 1180, y: 200, width: 160, height: 24 },
+        { x: 1420, y: 280, width: 130, height: 24 },
+        { x: 1850, y: 300, width: 140, height: 24 },
+        { x: 2080, y: 220, width: 180, height: 24 },
+        { x: 2620, y: 280, width: 140, height: 24 }
     ];
 
-    // Itens Coletáveis (type: 'star' ou 'book')
     items = [
         { x: 295, y: 260, width: 24, height: 24, type: 'star', collected: false },
-        { x: 480, y: 180, width: 24, height: 24, type: 'book', collected: false },
-        { x: 540, y: 180, width: 24, height: 24, type: 'star', collected: false },
+        { x: 490, y: 180, width: 28, height: 26, type: 'janja', collected: false }, // Montada Janja!
         { x: 960, y: 250, width: 24, height: 24, type: 'book', collected: false },
         { x: 1210, y: 160, width: 24, height: 24, type: 'star', collected: false },
-        { x: 1445, y: 240, width: 24, height: 24, type: 'star', collected: false },
-        { x: 1600, y: 360, width: 24, height: 24, type: 'book', collected: false },
-        { x: 1900, y: 270, width: 24, height: 24, type: 'star', collected: false },
-        { x: 2120, y: 190, width: 24, height: 24, type: 'book', collected: false },
-        { x: 2345, y: 120, width: 24, height: 24, type: 'star', collected: false },
-        { x: 2700, y: 250, width: 24, height: 24, type: 'book', collected: false },
-        { x: 2850, y: 360, width: 24, height: 24, type: 'star', collected: false }
+        { x: 1460, y: 240, width: 24, height: 24, type: 'star', collected: false },
+        { x: 1890, y: 260, width: 28, height: 26, type: 'janja', collected: false }, // Outra Montada Janja
+        { x: 2140, y: 180, width: 24, height: 24, type: 'book', collected: false },
+        { x: 2670, y: 240, width: 24, height: 24, type: 'star', collected: false }
     ];
 
-    // Espinhos no Chão
     spikes = [
-        { x: 350, y: 380, width: 60, height: 20 },
-        { x: 1080, y: 380, width: 60, height: 20 },
-        { x: 1320, y: 380, width: 60, height: 20 },
-        { x: 2000, y: 380, width: 90, height: 20 },
-        { x: 2600, y: 380, width: 60, height: 20 }
+        { x: 350, y: 380, width: 45, height: 20 },
+        { x: 1100, y: 380, width: 45, height: 20 },
+        { x: 2020, y: 380, width: 60, height: 20 }
     ];
 
-    // Inimigos
     enemies = [
-        new Enemy(500, 356, 420, 680),
-        new Enemy(850, 356, 810, 1060),
-        new Enemy(1450, 356, 1390, 1630),
-        new Enemy(1160, 156, 1150, 1310),
-        new Enemy(2150, 356, 2100, 2380),
-        new Enemy(2750, 356, 2670, 2980)
+        new Enemy(500, 356, 420, 700, 'bolsonaro', 'BOLSONARO'),
+        new Enemy(880, 346, 860, 1080, 'flavio_dino', 'FLAVIO HIPOTETICO (NERFADO)'),
+        new Enemy(1350, 356, 1200, 1650, 'nikole', 'NIKOLE'),
+        new Enemy(1190, 156, 1180, 1320, 'pavanato', 'PAVANATO'),
+        new Enemy(1900, 356, 1800, 2000, 'bolsonaro', 'BOLSONARO'),
+        new Enemy(2180, 346, 2100, 2450, 'flavio_dino', 'FLAVIO NO DINO')
     ];
 
-    // Bandeira / Portal Final
+    boss = new BossTrump(3050, 328);
+
     goal = {
-        x: 3050,
+        x: 3420,
         y: 260,
         width: 40,
         height: 140
     };
 
-    // Nuvens Decorativas
     clouds = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 24; i++) {
         clouds.push({
             x: i * 180 + Math.random() * 60,
             y: 40 + Math.random() * 100,
@@ -479,7 +656,6 @@ function initLevel() {
     }
 }
 
-// Funções Auxiliares
 function checkCollision(rect1, rect2) {
     return (
         rect1.x < rect2.x + rect2.width &&
@@ -491,7 +667,20 @@ function checkCollision(rect1, rect2) {
 
 function updateHUD() {
     livesDisplay.textContent = lives;
+    mountDisplay.textContent = player && player.mounted ? 'JANJA (ATIVA)' : 'NÃO';
     scoreDisplay.textContent = score.toString().padStart(4, '0');
+}
+
+function takeDamage() {
+    if (player.invulnerable > 0) return;
+    if (player.mounted) {
+        player.mounted = false;
+        player.invulnerable = 90;
+        addFloatingText('JANJA PROTEGEU!', player.x, player.y - 10, '#ff99cc');
+        updateHUD();
+        return;
+    }
+    loseLife();
 }
 
 function loseLife() {
@@ -504,27 +693,23 @@ function loseLife() {
         gameOverScreen.classList.remove('hidden');
     } else {
         player.resetPosition();
-        player.invulnerable = 90; // 1.5s de invencibilidade
+        player.invulnerable = 90;
         cameraX = 0;
     }
 }
 
-// Renderização de Elementos do Cenário
 function drawBackground() {
-    // Céu Azul Celeste
     ctx.fillStyle = '#5c94fc';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Colinas distantes (estilo Super Mario World)
     ctx.fillStyle = '#437c17';
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
         let hillX = (i * 500) - (cameraX * 0.3);
         ctx.beginPath();
         ctx.arc(hillX + 150, 400, 140, Math.PI, 0, false);
         ctx.fill();
     }
 
-    // Nuvens em Pixel Art
     ctx.fillStyle = '#ffffff';
     for (let c of clouds) {
         let cx = c.x - (cameraX * 0.5);
@@ -536,15 +721,12 @@ function drawBackground() {
 function drawPlatforms() {
     for (let plat of platforms) {
         if (plat.x + plat.width < cameraX || plat.x > cameraX + canvas.width) continue;
-
         const px = Math.floor(plat.x - cameraX);
         const py = Math.floor(plat.y);
 
-        // Terra (Marrom com blocos estilo SMW)
         ctx.fillStyle = '#c84c0c';
         ctx.fillRect(px, py + 10, plat.width, plat.height - 10);
 
-        // Detalhes na terra
         ctx.fillStyle = '#fc9838';
         for (let bx = 0; bx < plat.width; bx += 32) {
             for (let by = 16; by < plat.height; by += 16) {
@@ -552,15 +734,10 @@ function drawPlatforms() {
             }
         }
 
-        // Topo de Grama Verde
         ctx.fillStyle = '#00a800';
         ctx.fillRect(px, py, plat.width, 10);
-        
-        // Brilho da Grama
         ctx.fillStyle = '#80d010';
         ctx.fillRect(px, py, plat.width, 4);
-
-        // Borda preta estilo retrô
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
         ctx.strokeRect(px, py, plat.width, plat.height);
@@ -595,25 +772,55 @@ function drawItems() {
         if (item.x + item.width < cameraX || item.x > cameraX + canvas.width) continue;
 
         const ix = Math.floor(item.x - cameraX);
-        const iy = Math.floor(item.y + Math.sin(Date.now() / 150) * 3); // Flutuação leve
+        const iy = Math.floor(item.y + Math.sin(Date.now() / 150) * 3);
 
         if (item.type === 'star') {
-            // Estrela Vermelha com borda dourada
             ctx.fillStyle = '#ffcc00';
             ctx.fillRect(ix + 2, iy + 2, 20, 20);
             ctx.fillStyle = '#ff0000';
             ctx.fillRect(ix + 5, iy + 5, 14, 14);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(ix + 10, iy + 8, 4, 4);
         } else if (item.type === 'book') {
-            // Livro Azul/Branco
             ctx.fillStyle = '#1e5799';
             ctx.fillRect(ix + 2, iy + 2, 20, 22);
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(ix + 6, iy + 4, 14, 18);
-            ctx.fillStyle = '#ffcc00';
-            ctx.fillRect(ix + 9, iy + 8, 8, 4);
+        } else if (item.type === 'janja') {
+            // Item Coração / Montada Janja
+            ctx.fillStyle = '#ff0066';
+            ctx.fillRect(ix + 2, iy + 4, 24, 18);
+            ctx.fillStyle = '#fff';
+            ctx.font = '7px "Press Start 2P"';
+            ctx.fillText('JANJA', ix - 4, iy - 4);
         }
+    }
+}
+
+function drawProjectiles() {
+    // Arremessável do Jogador: "Kit Gay" (Arco-íris)
+    const rainbow = ['#ff0000', '#ff9900', '#ffff00', '#33cc33', '#3399ff', '#9933ff'];
+    for (let p of projectiles) {
+        const px = Math.floor(p.x - cameraX);
+        const py = Math.floor(p.y);
+        for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = rainbow[i];
+            ctx.fillRect(px, py + i * 2, p.width, 2);
+        }
+        ctx.fillStyle = '#fff';
+        ctx.font = '6px "Press Start 2P"';
+        ctx.fillText('KIT GAY', px - 6, py - 3);
+    }
+
+    // Projéteis Inimigos: "Kit Hétero" / "Tarifa"
+    for (let ep of enemyProjectiles) {
+        const ex = Math.floor(ep.x - cameraX);
+        const ey = Math.floor(ep.y);
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(ex, ey, ep.width, ep.height);
+        ctx.strokeStyle = '#ffdf00';
+        ctx.strokeRect(ex, ey, ep.width, ep.height);
+        ctx.fillStyle = '#ffdf00';
+        ctx.font = '6px "Press Start 2P"';
+        ctx.fillText(ep.label, ex - 10, ey - 3);
     }
 }
 
@@ -621,67 +828,155 @@ function drawGoal() {
     const gx = Math.floor(goal.x - cameraX);
     const gy = Math.floor(goal.y);
 
-    // Base
     ctx.fillStyle = '#555';
     ctx.fillRect(gx, gy + goal.height - 16, 40, 16);
-
-    // Mastro
     ctx.fillStyle = '#e6e6e6';
     ctx.fillRect(gx + 16, gy, 8, goal.height - 16);
-
-    // Topo dourado
     ctx.fillStyle = '#ffcc00';
     ctx.fillRect(gx + 12, gy - 12, 16, 12);
-
-    // Bandeira Vermelha com Estrela
     ctx.fillStyle = '#cc0000';
     ctx.fillRect(gx + 24, gy + 8, 48, 32);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(gx + 44, gy + 18, 10, 10);
 }
 
-// Loop Principal do Jogo
 function update() {
     if (gameState !== 'PLAYING') return;
 
     player.update();
 
-    // Atualizar Câmera
     cameraX = player.x - canvas.width / 3;
     if (cameraX < 0) cameraX = 0;
     if (cameraX > levelWidth - canvas.width) cameraX = levelWidth - canvas.width;
 
-    // Colisão com Itens
+    // Coletar Itens
     for (let item of items) {
         if (!item.collected && checkCollision(player, item)) {
             item.collected = true;
-            score += item.type === 'star' ? 100 : 150;
+            if (item.type === 'janja') {
+                player.mounted = true;
+                addFloatingText('MONTADA JANJA!', player.x, player.y - 10, '#ff99cc');
+                score += 200;
+            } else {
+                score += item.type === 'star' ? 100 : 150;
+            }
             updateHUD();
         }
     }
 
-    // Colisão com Espinhos
-    if (player.invulnerable === 0) {
-        for (let s of spikes) {
-            if (checkCollision(player, s)) {
-                loseLife();
+    // Atualizar Projéteis "Kit Gay"
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        let p = projectiles[i];
+        p.x += p.vx;
+        if (p.x < cameraX - 50 || p.x > cameraX + canvas.width + 50) {
+            projectiles.splice(i, 1);
+            continue;
+        }
+
+        // Acertar inimigos com o Kit Gay
+        let hit = false;
+        for (let enemy of enemies) {
+            if (!enemy.squashed && checkCollision(p, enemy)) {
+                enemy.squashed = true;
+                score += 250;
+                addFloatingText('CONVERTIDO! +250', enemy.x, enemy.y, '#ffff00');
+                updateHUD();
+                hit = true;
                 break;
             }
         }
+
+        // Acertar Boss Trump com o Kit Gay
+        if (!hit && boss && boss.alive && checkCollision(p, boss)) {
+            boss.hp--;
+            hit = true;
+            addFloatingText('-1 HP TRUMP!', boss.x, boss.y, '#ff4444');
+            if (boss.hp <= 0) {
+                boss.alive = false;
+                score += 1000;
+                addFloatingText('TRUMP DERROTADO! +1000', boss.x - 20, boss.y, '#44ff44');
+                updateHUD();
+            }
+        }
+
+        if (hit) projectiles.splice(i, 1);
     }
 
-    // Atualizar e Checar Inimigos
-    for (let enemy of enemies) {
-        enemy.update();
-        if (player.invulnerable === 0 && checkCollision(player, enemy)) {
-            loseLife();
+    // Atualizar Projéteis Inimigos ("Kit Hétero" / "Tarifa")
+    for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+        let ep = enemyProjectiles[i];
+        ep.x += ep.vx;
+        if (checkCollision(ep, player)) {
+            enemyProjectiles.splice(i, 1);
+            takeDamage();
+            continue;
+        }
+        if (ep.x < cameraX - 100 || ep.x > cameraX + canvas.width + 100) {
+            enemyProjectiles.splice(i, 1);
+        }
+    }
+
+    // Espinhos
+    for (let s of spikes) {
+        if (checkCollision(player, s)) {
+            takeDamage();
             break;
         }
     }
 
-    // Checar Vitória (Bandeira Final)
+    // Atualizar Inimigos + Mecânica de Saltar na Cabeça para Amassar!
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        let enemy = enemies[i];
+        enemy.update();
+        if (enemy.squashed) {
+            if (enemy.squashTimer <= 0) enemies.splice(i, 1);
+            continue;
+        }
+
+        if (checkCollision(player, enemy)) {
+            // Verifica se o jogador está a cair por cima da cabeça do inimigo
+            if (player.vy > 0 && player.y + player.height - player.vy <= enemy.y + 18) {
+                enemy.squashed = true;
+                player.vy = -10; // Salto de ricochete ao amassar
+                score += 300;
+                addFloatingText('AMASSADO! +300', enemy.x, enemy.y, '#44ff44');
+                updateHUD();
+            } else {
+                takeDamage();
+            }
+        }
+    }
+
+    // Atualizar Boss Trump
+    if (boss && boss.alive) {
+        boss.update();
+        if (checkCollision(player, boss)) {
+            if (player.vy > 0 && player.y + player.height - player.vy <= boss.y + 20) {
+                boss.hp--;
+                player.vy = -11.5;
+                addFloatingText('AMASSOU O TRUMP!', boss.x, boss.y, '#ffcc00');
+                if (boss.hp <= 0) {
+                    boss.alive = false;
+                    score += 1000;
+                    addFloatingText('TRUMP DERROTADO! +1000', boss.x - 20, boss.y, '#44ff44');
+                    updateHUD();
+                }
+            } else {
+                takeDamage();
+            }
+        }
+    }
+
+    // Textos Flutuantes
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        floatingTexts[i].y -= 1;
+        floatingTexts[i].timer--;
+        if (floatingTexts[i].timer <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Vitória
     if (checkCollision(player, goal)) {
-        score += 500; // Bônus de final de fase
+        score += 500;
         updateHUD();
         gameState = 'VICTORY';
         hud.classList.add('hidden');
@@ -697,6 +992,7 @@ function draw() {
     drawPlatforms();
     drawSpikes();
     drawItems();
+    drawProjectiles();
     drawGoal();
 
     for (let enemy of enemies) {
@@ -705,8 +1001,18 @@ function draw() {
         }
     }
 
+    if (boss && boss.alive) {
+        boss.draw(ctx, cameraX);
+    }
+
     if (player) {
         player.draw(ctx, cameraX);
+    }
+
+    for (let ft of floatingTexts) {
+        ctx.fillStyle = ft.color;
+        ctx.font = '8px "Press Start 2P"';
+        ctx.fillText(ft.text, Math.floor(ft.x - cameraX), Math.floor(ft.y));
     }
 }
 
@@ -716,14 +1022,13 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Gerenciamento de Botões e Estados
 function startGame() {
     score = 0;
     lives = 3;
-    updateHUD();
     initLevel();
+    updateHUD();
     gameState = 'PLAYING';
-    
+
     startScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
     victoryScreen.classList.add('hidden');
@@ -734,7 +1039,6 @@ document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn-lose').addEventListener('click', startGame);
 document.getElementById('restart-btn-win').addEventListener('click', startGame);
 
-// Inicializar cenário de fundo na tela de título e rodar loop
 initLevel();
 requestAnimationFrame(gameLoop);
 </script>
