@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Lula World - v2.2 Speedrun Ranked</title>
+    <title>Super Lula World - v2.1 Online Ranked</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -53,9 +53,8 @@
             background: rgba(0, 0, 0, 0.88);
             color: #fff;
             text-align: center;
-            z-index: 20;
+            z-index: 10;
             padding: 18px;
-            pointer-events: auto;
         }
 
         .hidden {
@@ -90,29 +89,23 @@
             display: flex;
             gap: 12px;
             margin-top: 8px;
-            z-index: 30;
         }
 
         button {
             font-family: 'Press Start 2P', monospace, sans-serif;
             font-size: 11px;
-            padding: 12px 20px;
+            padding: 11px 18px;
             background-color: #ffcc00;
             color: #000;
             border: 3px solid #fff;
             cursor: pointer;
             box-shadow: 4px 4px 0px #000;
             transition: transform 0.1s;
-            pointer-events: auto;
         }
 
         button:hover {
             background-color: #ffe066;
             transform: scale(1.04);
-        }
-
-        button:active {
-            transform: scale(0.96);
         }
 
         button.secondary {
@@ -124,24 +117,24 @@
             font-family: 'Press Start 2P', monospace, sans-serif;
             font-size: 11px;
             padding: 10px;
-            width: 260px;
+            width: 240px;
             text-align: center;
             background: #000;
             color: #00ff66;
             border: 3px solid #fff;
             margin-bottom: 10px;
             text-transform: uppercase;
-            user-select: text;
         }
 
+        /* Tabela de Ranking */
         .leaderboard-box {
-            width: 92%;
-            max-width: 650px;
+            width: 90%;
+            max-width: 620px;
             background: rgba(20, 20, 20, 0.95);
             border: 2px solid #ffcc00;
             padding: 10px;
             margin-bottom: 12px;
-            max-height: 240px;
+            max-height: 230px;
             overflow-y: auto;
         }
 
@@ -152,12 +145,15 @@
         }
 
         th, td {
-            padding: 7px 5px;
+            padding: 6px 4px;
             border-bottom: 1px solid #333;
             text-align: left;
         }
 
-        th { color: #ffcc00; }
+        th {
+            color: #ffcc00;
+        }
+
         td.rank-1 { color: #ffd700; }
         td.rank-2 { color: #c0c0c0; }
         td.rank-3 { color: #cd7f32; }
@@ -198,31 +194,19 @@
     <!-- Tela Inicial -->
     <div id="start-screen" class="overlay">
         <h1>SUPER LULA WORLD</h1>
-        <div class="version-badge">v2.2 - SPEEDRUN & 5 BOSSES</div>
+        <div class="version-badge">v2.1 - ANTI-CHEAT ONLINE RANKING</div>
         <p>
             [Setas/A,D] Mover | [Espaço/W] Pular | [X/J/Shift] Lançar "Kit Gay"<br>
-            Derrote os 5 Bosses: 1.Trump | 2.Bukele | 3.Xi Jinping | 4.Kim Jong-un | 5.Bolsonaro
+            Derrote os 5 Bosses (Trump, Bukele, Xi Jinping, Kim Jong-un e Bolsonaro Final)<br>
+            <span id="server-status" style="color:#00ff66;">Validador Anti-Cheat pronto!</span>
         </p>
         <div class="btn-group">
-            <button id="open-register-btn" type="button">INICIAR SPEEDRUN</button>
-            <button id="open-ranking-btn" type="button" class="secondary">VER RANKING TOP 10</button>
+            <button id="start-btn">INICIAR SPEEDRUN</button>
+            <button id="open-ranking-btn" class="secondary">TOP 10 ONLINE</button>
         </div>
     </div>
 
-    <!-- Tela de Registo de Nome Inicial -->
-    <div id="register-screen" class="overlay hidden">
-        <h1 style="color: #ffcc00;">REGISTO DE JOGADOR</h1>
-        <p>Introduza o seu nick para entrar na tabela de Speedrun:</p>
-        <input type="text" id="initial-name-input" placeholder="SEU NICK (EX: MATEUS)" maxlength="14">
-        <br>
-        <div class="btn-group">
-            <button id="confirm-start-btn" type="button">COMEÇAR JOGO</button>
-            <button id="cancel-register-btn" type="button" class="secondary">VOLTAR</button>
-        </div>
-        <p id="register-error-msg" style="margin-top:8px; color:#ff4444;"></p>
-    </div>
-
-    <!-- Modal de Ranking -->
+    <!-- Modal de Ranking Online -->
     <div id="ranking-screen" class="overlay hidden">
         <h1 style="color: #ffcc00;">TOP 10 SPEEDRUNNERS</h1>
         <div class="leaderboard-box">
@@ -231,22 +215,24 @@
                     <tr>
                         <th>#</th>
                         <th>JOGADOR</th>
-                        <th>TEMPO</th>
+                        <th>TEMPO (VERIFICADO)</th>
                         <th>PONTOS</th>
                         <th>DATA</th>
                     </tr>
                 </thead>
-                <tbody id="leaderboard-body"></tbody>
+                <tbody id="leaderboard-body">
+                    <tr><td colspan="5" style="text-align:center;">Carregando ranking...</td></tr>
+                </tbody>
             </table>
         </div>
-        <button id="close-ranking-btn" type="button">VOLTAR</button>
+        <button id="close-ranking-btn">VOLTAR</button>
     </div>
 
     <!-- Transição de Fase -->
     <div id="stage-clear-screen" class="overlay hidden">
         <h1 style="color: #ffcc00;" id="stage-clear-title">FASE 1 CONCLUÍDA!</h1>
         <p id="stage-clear-info">SPLIT REGISTRADO!</p>
-        <button id="next-stage-btn" type="button">PRÓXIMA FASE &gt;&gt;</button>
+        <button id="next-stage-btn">PRÓXIMA FASE >></button>
     </div>
 
     <!-- Game Over -->
@@ -254,19 +240,24 @@
         <h1 style="color: #ff4444;">GAME OVER</h1>
         <p id="final-score-lose">PONTOS: 0</p>
         <div class="btn-group">
-            <button id="restart-btn-lose" type="button">NOVA TENTATIVA</button>
-            <button id="gameover-ranking-btn" type="button" class="secondary">VER RANKING</button>
+            <button id="restart-btn-lose">NOVA TENTATIVA</button>
+            <button id="gameover-ranking-btn" class="secondary">VER RANKING</button>
         </div>
     </div>
 
-    <!-- Vitória + Registo Automático no Ranking -->
+    <!-- Vitória + Envio Protegido pro Ranking -->
     <div id="victory-screen" class="overlay hidden">
         <h1 style="color: #44ff44;">CAMPANHA ZERADA!</h1>
         <p id="final-score-win">PONTOS: 0</p>
-        <p id="victory-saved-msg" style="color:#00ff66; margin-bottom:15px;"></p>
+        <div id="submit-score-area">
+            <input type="text" id="player-name-input" placeholder="SEU NICK (EX: PEDRO)" maxlength="14">
+            <br>
+            <button id="submit-score-btn">ENVIAR PRO RANKING OFICIAL</button>
+            <p id="submit-status-msg" style="margin-top:8px; color:#ffcc00;"></p>
+        </div>
         <div class="btn-group">
-            <button id="restart-btn-win" type="button">JOGAR NOVAMENTE</button>
-            <button id="victory-ranking-btn" type="button" class="secondary">VER RANKING</button>
+            <button id="restart-btn-win">JOGAR NOVAMENTE</button>
+            <button id="victory-ranking-btn" class="secondary">TOP 10 ONLINE</button>
         </div>
     </div>
 
@@ -274,8 +265,10 @@
 </div>
 
 <script>
+// IIFE Isolada: Impede manipulação de variáveis pelo Console F12 do navegador
 (() => {
-    const STORAGE_KEY = "slw_ticedev_leaderboard_v22";
+    // COLOQUE AQUI A URL DO SEU CLOUDFLARE WORKER:
+    const API_URL = "https://super-lula-ranking.SEU-SUBDOMINIO.workers.dev";
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -288,10 +281,6 @@
     const timerDisplay = document.getElementById('timer-display');
 
     const startScreen = document.getElementById('start-screen');
-    const registerScreen = document.getElementById('register-screen');
-    const initialNameInput = document.getElementById('initial-name-input');
-    const registerErrorMsg = document.getElementById('register-error-msg');
-
     const rankingScreen = document.getElementById('ranking-screen');
     const leaderboardBody = document.getElementById('leaderboard-body');
     const stageClearScreen = document.getElementById('stage-clear-screen');
@@ -301,7 +290,9 @@
     const victoryScreen = document.getElementById('victory-screen');
     const finalScoreLose = document.getElementById('final-score-lose');
     const finalScoreWin = document.getElementById('final-score-win');
-    const victorySavedMsg = document.getElementById('victory-saved-msg');
+    const playerNameInput = document.getElementById('player-name-input');
+    const submitScoreBtn = document.getElementById('submit-score-btn');
+    const submitStatusMsg = document.getElementById('submit-status-msg');
 
     let gameState = 'START';
     let currentLevel = 1;
@@ -312,12 +303,12 @@
     const gravity = 0.58;
     const levelWidth = 3400;
 
-    let currentPlayerName = "JOGADOR";
+    // Anti-Cheat & Telemetria de Speedrun
     let speedrunElapsedMs = 0;
-    let runRealStartWallClock = 0;
     let lastFrameTime = 0;
+    let sessionToken = null;
     let stageSplits = [];
-    let bossesDefeatedFlags = [false, false, false, false, false];
+    let scoreSubmitted = false;
 
     function formatSpeedrunTime(ms) {
         const totalSeconds = Math.floor(ms / 1000);
@@ -327,85 +318,86 @@
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
     }
 
-    function generateChecksum(entries) {
-        const str = JSON.stringify(entries) + "_SALT_TIC_E_DEV_2026";
-        let hash = 5381;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) + hash) + str.charCodeAt(i);
-        }
-        return (hash >>> 0).toString(16);
-    }
-
-    function getLocalLeaderboard() {
+    async function requestNewSessionToken() {
+        sessionToken = null;
+        stageSplits = [];
         try {
-            const raw = window.localStorage.getItem(STORAGE_KEY);
-            if (!raw) return []; // Começa estritamente zerado!
-            const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.list) && parsed.checksum === generateChecksum(parsed.list)) {
-                return parsed.list;
+            const res = await fetch(`${API_URL}/start`, { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                sessionToken = data.token;
             }
-        } catch (e) {}
-        return [];
+        } catch (e) {
+            console.warn("Modo offline (Worker ainda nao configurado).");
+        }
     }
 
-    function saveLocalLeaderboard(list) {
-        list.sort((a, b) => a.timeMs - b.timeMs);
-        const top10 = list.slice(0, 10);
+    async function loadLeaderboard() {
+        leaderboardBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sincronizando com o servidor...</td></tr>';
         try {
-            const payload = {
-                list: top10,
-                checksum: generateChecksum(top10)
-            };
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-        } catch (e) {}
-        return top10;
+            const res = await fetch(`${API_URL}/leaderboard`);
+            if (!res.ok) throw new Error();
+            const list = await res.json();
+            if (list.length === 0) {
+                leaderboardBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum tempo registrado ainda. Seja o primeiro!</td></tr>';
+                return;
+            }
+            leaderboardBody.innerHTML = list.map((entry, idx) => `
+                <tr>
+                    <td class="rank-${idx + 1}">#${idx + 1}</td>
+                    <td class="rank-${idx + 1}">${entry.name}</td>
+                    <td style="color:#00ff66;">${formatSpeedrunTime(entry.timeMs)}</td>
+                    <td>${entry.score}</td>
+                    <td>${entry.date || ''}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            leaderboardBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff6666;">Configure a URL do Cloudflare Worker na constante API_URL para ativar o ranking global!</td></tr>';
+        }
     }
 
-    function loadLeaderboard() {
-        const localList = getLocalLeaderboard();
-        if (!localList || localList.length === 0) {
-            leaderboardBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum tempo registrado!</td></tr>';
+    async function submitVerifiedRun() {
+        if (scoreSubmitted) return;
+        const name = playerNameInput.value.trim();
+        if (!name) {
+            submitStatusMsg.textContent = "Digite seu nick antes de enviar!";
             return;
         }
-        leaderboardBody.innerHTML = localList.map((entry, idx) => `
-            <tr>
-                <td class="rank-${idx + 1}">#${idx + 1}</td>
-                <td class="rank-${idx + 1}">${entry.name}</td>
-                <td style="color:#00ff66;">${formatSpeedrunTime(entry.timeMs)}</td>
-                <td>${entry.score}</td>
-                <td>${entry.date || ''}</td>
-            </tr>
-        `).join('');
-    }
-
-    function registerAndStartGame() {
-        const rawName = initialNameInput.value.trim();
-        if (!rawName) {
-            registerErrorMsg.textContent = "Por favor, digite seu nick!";
+        if (!sessionToken || stageSplits.length !== 5) {
+            submitStatusMsg.textContent = "Erro: Sessao sem token oficial do servidor.";
             return;
         }
-        currentPlayerName = rawName.replace(/[^a-zA-Z0-9 _-]/g, "").substring(0, 14).toUpperCase() || "JOGADOR";
-        startCampaign();
-    }
 
-    function saveVictoryRun() {
-        const allBossesDead = bossesDefeatedFlags.every(Boolean);
-        const wallClockElapsed = Date.now() - runRealStartWallClock;
+        submitScoreBtn.disabled = true;
+        submitStatusMsg.textContent = "Validando splits e assinatura no servidor...";
 
-        if (!allBossesDead || stageSplits.length !== 5) return;
-        if (speedrunElapsedMs < 35000 || wallClockElapsed < 35000) return;
-
-        const newEntry = {
-            name: currentPlayerName,
-            timeMs: Math.round(speedrunElapsedMs),
-            score: score,
-            date: new Date().toISOString().split("T")[0]
-        };
-
-        const currentList = getLocalLeaderboard();
-        currentList.push(newEntry);
-        saveLocalLeaderboard(currentList);
-        victorySavedMsg.textContent = `PARABÉNS ${currentPlayerName}! TEMPO SALVO NO RANKING.`;
+        try {
+            const res = await fetch(`${API_URL}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    score,
+                    clientTimeMs: Math.round(speedrunElapsedMs),
+                    splits: stageSplits,
+                    token: sessionToken
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                scoreSubmitted = true;
+                submitStatusMsg.style.color = "#00ff66";
+                submitStatusMsg.textContent = "TEMPO VERIFICADO E SALVO NO TOP 10!";
+            } else {
+                submitStatusMsg.style.color = "#ff4444";
+                submitStatusMsg.textContent = data.error || "Rejeitado pelo Anti-Cheat.";
+                submitScoreBtn.disabled = false;
+            }
+        } catch (e) {
+            submitStatusMsg.style.color = "#ff4444";
+            submitStatusMsg.textContent = "Falha de conexao com o servidor de Ranking.";
+            submitScoreBtn.disabled = false;
+        }
     }
 
     const LEVEL_CONFIGS = {
@@ -419,10 +411,6 @@
     const keys = { left: false, right: false, up: false };
 
     window.addEventListener('keydown', (e) => {
-        if (e.code === 'Enter' && !registerScreen.classList.contains('hidden')) {
-            registerAndStartGame();
-            return;
-        }
         if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
         if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
         if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
@@ -430,7 +418,7 @@
             if (gameState === 'PLAYING') e.preventDefault();
         }
         if ((e.code === 'KeyX' || e.code === 'KeyJ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && gameState === 'PLAYING') {
-            if (player) player.shoot();
+            player.shoot();
         }
     });
 
@@ -807,9 +795,10 @@
         } else {
             gameState = 'VICTORY';
             hud.classList.add('hidden');
-            victorySavedMsg.textContent = "";
-            finalScoreWin.innerHTML = `PONTOS FINAIS: ${score}<br>TEMPO FINAL DA SPEEDRUN: <span style="color:#00ff66;">${formatSpeedrunTime(speedrunElapsedMs)}</span>`;
-            saveVictoryRun();
+            scoreSubmitted = false;
+            submitScoreBtn.disabled = false;
+            submitStatusMsg.textContent = "";
+            finalScoreWin.innerHTML = `PONTOS FINAIS: ${score}<br>TEMPO OFICIAL DA RUN: <span style="color:#00ff66;">${formatSpeedrunTime(speedrunElapsedMs)}</span>`;
             victoryScreen.classList.remove('hidden');
         }
     }
@@ -867,7 +856,6 @@
                 addFloatingText('-1 HP', boss.x, boss.y, '#ff4444');
                 if (boss.hp <= 0) {
                     boss.alive = false;
-                    bossesDefeatedFlags[currentLevel - 1] = true;
                     score += 1000;
                     addFloatingText(`${boss.bossName} DERROTADO!`, boss.x - 60, boss.y - 10, '#44ff44');
                     updateHUD();
@@ -920,7 +908,6 @@
                     addFloatingText('AMASSOU O BOSS!', boss.x, boss.y, '#ffcc00');
                     if (boss.hp <= 0) {
                         boss.alive = false;
-                        bossesDefeatedFlags[currentLevel - 1] = true;
                         score += 1000;
                         addFloatingText('BOSS DERROTADO! AVANCE!', boss.x - 50, boss.y, '#44ff44');
                         updateHUD();
@@ -1043,27 +1030,20 @@
         requestAnimationFrame(gameLoop);
     }
 
-    function startCampaign() {
-        score = 0;
-        lives = 3;
-        currentLevel = 1;
-        speedrunElapsedMs = 0;
-        stageSplits = [];
-        bossesDefeatedFlags = [false, false, false, false, false];
-        runRealStartWallClock = Date.now();
+    async function startCampaign() {
+        score = 0; lives = 3; currentLevel = 1; speedrunElapsedMs = 0;
         lastFrameTime = performance.now();
+        requestNewSessionToken();
         initLevel(false);
         updateHUD();
         gameState = 'PLAYING';
 
         startScreen.classList.add('hidden');
-        registerScreen.classList.add('hidden');
         rankingScreen.classList.add('hidden');
         stageClearScreen.classList.add('hidden');
         gameOverScreen.classList.add('hidden');
         victoryScreen.classList.add('hidden');
         hud.classList.remove('hidden');
-        window.focus();
     }
 
     function startNextStage() {
@@ -1074,15 +1054,6 @@
         updateHUD();
         gameState = 'PLAYING';
         stageClearScreen.classList.add('hidden');
-        window.focus();
-    }
-
-    function openRegisterModal() {
-        initialNameInput.value = "";
-        registerErrorMsg.textContent = "";
-        startScreen.classList.add('hidden');
-        registerScreen.classList.remove('hidden');
-        initialNameInput.focus();
     }
 
     function openRankingModal() {
@@ -1090,28 +1061,15 @@
         loadLeaderboard();
     }
 
-    // Eventos de clique atualizados
-    document.getElementById('open-register-btn').onclick = openRegisterModal;
-    document.getElementById('confirm-start-btn').onclick = registerAndStartGame;
-    document.getElementById('cancel-register-btn').onclick = () => {
-        registerScreen.classList.add('hidden');
-        startScreen.classList.remove('hidden');
-    };
-
-    document.getElementById('next-stage-btn').onclick = startNextStage;
-    document.getElementById('restart-btn-lose').onclick = () => {
-        gameOverScreen.classList.add('hidden');
-        openRegisterModal();
-    };
-    document.getElementById('restart-btn-win').onclick = () => {
-        victoryScreen.classList.add('hidden');
-        openRegisterModal();
-    };
-
-    document.getElementById('open-ranking-btn').onclick = openRankingModal;
-    document.getElementById('gameover-ranking-btn').onclick = openRankingModal;
-    document.getElementById('victory-ranking-btn').onclick = openRankingModal;
-    document.getElementById('close-ranking-btn').onclick = () => rankingScreen.classList.add('hidden');
+    document.getElementById('start-btn').addEventListener('click', startCampaign);
+    document.getElementById('next-stage-btn').addEventListener('click', startNextStage);
+    document.getElementById('restart-btn-lose').addEventListener('click', startCampaign);
+    document.getElementById('restart-btn-win').addEventListener('click', startCampaign);
+    document.getElementById('open-ranking-btn').addEventListener('click', openRankingModal);
+    document.getElementById('gameover-ranking-btn').addEventListener('click', openRankingModal);
+    document.getElementById('victory-ranking-btn').addEventListener('click', openRankingModal);
+    document.getElementById('close-ranking-btn').addEventListener('click', () => rankingScreen.classList.add('hidden'));
+    submitScoreBtn.addEventListener('click', submitVerifiedRun);
 
     initLevel(false);
     requestAnimationFrame(gameLoop);
